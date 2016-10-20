@@ -589,7 +589,8 @@ if ( ! function_exists( 'copier_maybe_copy' ) ) {
 
         extract( $option );
 
-        $redirect_to = get_option('am-do-activation-redirect');
+        $dashboard_redirect = get_option('am-do-activation-redirect');
+        $redirect_to = '/wp-json/am/v1/logout?goto='.$dashboard_redirect;
 
         if ( ! is_admin() ) {
             // We'll try to avoid problems with AJAX this way
@@ -616,7 +617,7 @@ if ( ! function_exists( 'copier_maybe_copy' ) ) {
          *
          * @param String $title
          */
-        $title = apply_filters( 'wpmudev_cloner_copy_page_title', __( 'We\'re setting up your new blog. Please wait...', WPMUDEV_COPIER_LANG_DOMAIN ) );
+        $title = apply_filters( 'wpmudev_cloner_copy_page_title', __( 'We\'re setting up your new website! Just one moment...', WPMUDEV_COPIER_LANG_DOMAIN ) );
 
         // In order to prevent JS broken responses, we'll use buffers unless the user specifies it in wp-config.php
         if ( copier_allow_buffered_response() ) {
