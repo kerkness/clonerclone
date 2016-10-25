@@ -366,6 +366,7 @@ if ( ! function_exists( 'copier_process_copy' ) ) {
 
             return array(
                 'error' => true,
+                'success' => false,
                 'message' => __( "Process Finished", WPMUDEV_COPIER_LANG_DOMAIN )
             );
         }
@@ -590,6 +591,13 @@ if ( ! function_exists( 'copier_maybe_copy' ) ) {
         extract( $option );
 
         $dashboard_redirect = get_option('am-do-activation-redirect');
+        $subscription_id = get_option('artmoi_subscription_id');
+        $artmoi_dashboard = get_option('artmoi_dashboard_url');
+
+        header("Access-Control-Allow-Origin: *");
+
+//        $site_id =
+
         $redirect_to = '/wp-json/am/v1/logout?goto='.$dashboard_redirect;
 
         if ( ! is_admin() ) {
@@ -722,9 +730,13 @@ if ( ! function_exists( 'copier_maybe_copy' ) ) {
                             .done(function( data ) {
                                 if ( typeof data == 'object') {
 
+                                    // Post message to artmoi as well
+                                    notifyArtMoi(data.data.message);
+
                                     copier_append_to_list( data.data.message );
 
-                                    if ( ! data.success ) {
+                                    if ( ! data.success )
+                                    {
                                         $('#spinner').hide();
                                         $('.redirect').show();
 //                                        location.href = '<?php //echo admin_url(); ?>//';
@@ -741,6 +753,18 @@ if ( ! function_exists( 'copier_maybe_copy' ) ) {
                                 }
 
                             });
+                        }
+
+                        function notifyArtMoi($message)
+                        {
+                            $.post('<?php echo $artmoi_dashboard ?>/website/wp_notification', {
+                                message : $message,
+                                subscriptionId : <?php echo $subscription_id ?>
+                            }, function($response){
+
+                                console.log($response);
+
+                            },'json')
                         }
 
                         function copier_append_to_list( message ) {
@@ -789,12 +813,12 @@ if ( ! function_exists( 'copier_process_ajax_template' ) ) {
     function copier_process_ajax_template() {
 
         if ( ! current_user_can( 'manage_options' ) )
-            wp_send_json_error( array( 'message' => __( "Security Error", WPMUDEV_COPIER_LANG_DOMAIN ) ) );
+            wp_send_json_error( array( 'message' => __( "Security Error : Managing Options Blocked", WPMUDEV_COPIER_LANG_DOMAIN ) ) );
 
         $check_nonce = check_ajax_referer( 'copier_process_copy', 'security', false );
 
         if ( ! $check_nonce )
-            wp_send_json_error( array( 'message' => __( "Security Error", WPMUDEV_COPIER_LANG_DOMAIN ) ) );
+            wp_send_json_error( array( 'message' => __( "Security Error : Nonce Failed", WPMUDEV_COPIER_LANG_DOMAIN ) ) );
 
         $option = get_option( 'copier-pending' );
 
